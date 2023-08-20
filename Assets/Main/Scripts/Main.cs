@@ -5,6 +5,8 @@ using System.Linq;
 using UnityEngine;
 using KModkit;
 using Rnd = UnityEngine.Random;
+using static UnityEditor.Experimental.Build.AssetBundle.BuildCommandSet;
+using System.Text.RegularExpressions;
 
 public class Main : MonoBehaviour
 {
@@ -827,60 +829,42 @@ public class Main : MonoBehaviour
 	}
 
 #pragma warning disable 414
-	private readonly string TwitchHelpMessage = @"Use `!{0} row col` to press the button at that location. Only can process one press per command";
+	private readonly string TwitchHelpMessage = @"Use '!{0} row col' to press the button at that location. Commands can be chained with semicolons.";
+
 #pragma warning restore 414
 
-	IEnumerator ProcessTwitchCommand(string Command)
+	IEnumerator ProcessTwitchCommand(string command)
 	{
-		string[] commands = Command.Trim().Split(' ');
-		yield return null;
-
-		if (commands.Length != 2)
-		{
-			yield return "sendtochaterror Invalid amount of commands.";
-			yield break;
-		}
-
-		foreach (string s in commands)
+		var parameters = command.ToUpperInvariant().Split(new[] { ',', ';'});
+        var list = new List<int>();
+        for (int i = 0; i < parameters.Length; i++)
         {
-			int num;
-
-			bool b = int.TryParse(s, out num);
-
-			if (!b)
-            {
-				yield return "sendtochaterror Commands contains characters that are not numbers.";
+			var m = Regex.Match(parameters[0], @"^\s*(?<row>\d+)\s+(?<col>\d+)\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+			if (!m.Success)
+				yield break;
+			var r = m.Groups["row"].Value;
+			var c = m.Groups["col"].Value;
+			int rNum;
+			int cNum;
+			if (!int.TryParse(r, out rNum) || !int.TryParse(c, out cNum))
+				yield break;
+			if (rNum < 1 || rNum > 10 || cNum < 1 || cNum > 10)
+			{
+				yield return "sendtochaterror Row and column numbers must be between 1 and 10.";
 				yield break;
 			}
-		}
-		int row = int.Parse(commands[0]);
-		int col = int.Parse(commands[1]);
-
-		if (row < 1 || row > 10)
+			int row = (11 - rNum) - 1;
+			int col = cNum - 1;
+			list.Add(row * 10 + col);
+        }
+        yield return null;
+        for (int i = 0; i < list.Count; i++)
         {
-			yield return "sendtochaterror Row needs to be bewtween 1 and 10 inclusively.";
-			yield break;
-		}
-
-		if (col < 0 || col > 9)
-		{
-			yield return "sendtochaterror Column needs to be bewtween 0 and 9 inclusively.";
-			yield break;
-		}
-
-		Cell c = FindCellToPress(row, col);
-
-		if (c == null)
-        {
-			yield return "sendtochaterror Could not process command. Please contact developer";
-			yield break;
-		}
-
-		else
-        {
-			KeypadPress(c.Button);
-		}
-	}
+            buttons[list[i]].OnInteract();
+            yield return new WaitForSeconds(0.1f);
+        }
+        yield break;
+    }
 
 	Cell FindCellToPress(int row, int col)
     {
