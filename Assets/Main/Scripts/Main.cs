@@ -303,56 +303,36 @@ public class Main : MonoBehaviour
 
 	void SetSafeRow1()
 	{
-		if (rcaPortNum > 1)
+		int safe = 0;
+
+		List<Func<bool>> conditions = new List<Func<bool>>()
 		{
-			Grid[9, 0].Safe = true;
-		}
+			() => rcaPortNum > 1,
+			() => int.Parse(serialNumber.Last().ToString()) % 2 == 0,
+			() => litIndicators.Count > unlitIndicators.Count,
+			() => dBatteryCount == 0,
+			() => indicators.Contains("BOB") || indicators.Contains("FRK"),
+			() => Bomb.GetPortPlates().Any(x => x.Contains("Parallel") && x.Contains("Serial")),
+			() => psPortNum == 0 && dviPortNum == 0,
+			() => dBatteryCount > aBatteryCount,
+			() => serialNumberLetters.Count == 3,
+			() => serialNumberDigits.Sum() < 10
+		};
 
+        for (int i = 0; i < conditions.Count; i++)
+        {
+            if (conditions[i]())
+            {
+                Grid[9, i].Safe = true;
+                safe++;
+            }
+        }
 
-		if (int.Parse("" + serialNumber.Last()) % 2 == 0)
+		//if there are no safe rows, set the square that is sum of batteries % 10 as safe
+		if (safe == 0)
 		{
-			Grid[9, 1].Safe = true;
-		}
-
-		if (litIndicators.Count > unlitIndicators.Count)
-		{
-
-			Grid[9, 2].Safe = true;
-		}
-
-		if (dBatteryCount == 0)
-		{
-			Grid[9, 3].Safe = true;
-		}
-
-		if (indicators.Contains("BOB") || indicators.Contains("FRK"))
-		{
-			Grid[9, 4].Safe = true;
-		}
-
-		if (Bomb.GetPortPlates().Any(x => x.Contains("Parallel") && x.Contains("Serial")))
-		{
-			Grid[9, 5].Safe = true;
-		}
-
-		if (psPortNum == 0 && dviPortNum == 0)
-		{
-			Grid[9, 6].Safe = true;
-		}
-
-		if (dBatteryCount > aBatteryCount)
-		{
-			Grid[9, 7].Safe = true;
-		}
-
-		if (serialNumberLetters.Count == 3)
-		{
-			Grid[9, 8].Safe = true;
-		}
-
-		if (serialNumberDigits.Sum() < 10)
-		{
-			Grid[9, 9].Safe = true;
+			int index = batteryCount % 10 - 1;
+			Grid[9, index].Safe = true;
 		}
 	}
 
