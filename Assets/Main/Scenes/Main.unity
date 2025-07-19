@@ -364,7 +364,7 @@ Prefab:
         type: 2}
       propertyPath: EdgeworkConfiguration
       value: 
-      objectReference: {fileID: 11400000, guid: f6ef82aaee1fee34a911a779bede387e,
+      objectReference: {fileID: 11400000, guid: ec4fecb99c51c474c847aaaa0da10157,
         type: 2}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 8814ea52310d2614a9feda02ec355ae4, type: 2}
