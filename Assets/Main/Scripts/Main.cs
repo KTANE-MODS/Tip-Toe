@@ -14,6 +14,7 @@ public class Main : MonoBehaviour
 	KMAudio Audio;
 
 	private bool ZenModeActive;
+	bool zenModeShenanigans = true;
 
 	bool colorblindOn = false; //dont want to delete code that does this
 
@@ -111,16 +112,14 @@ public class Main : MonoBehaviour
 
 	void Start()
 	{
-		startingMinutes = (int)Bomb.GetTime() / 60;
-
 		if (ZenModeActive)
         {
-			startingMinutes++;
+			startingMinutes = 1;
         }
 
 		else
         {
-			startingMinutes--;
+			startingMinutes = ((int)Bomb.GetTime() / 60) - 1;
         }
 
 		GetEdgework();
@@ -250,7 +249,15 @@ public class Main : MonoBehaviour
 
 		if (ZenModeActive)
         {
-			if (minutes <= startingMinutes)
+			if (zenModeShenanigans)
+			{
+				if (minutes > 0)
+					return;
+				else
+					zenModeShenanigans = false;
+			}
+
+			if (minutes < startingMinutes)
             {
 				return;
             }
